@@ -18,6 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def error(message: str):
+    return {"status": "error", "message": message}
+
 def get_db():
     db = SessionLocal()
     try:
@@ -58,13 +61,13 @@ def get_profiles(
     VALID_SORT_FIELDS = ["age", "created_at", "gender_probability"]
 
     if sort_by and sort_by not in VALID_SORT_FIELDS:
-        return {"status": "error", "message": "Invalid query parameters"}
+        return error("Invalid query parameters")
 
     if order not in ["asc", "desc"]:
-        return {"status": "error", "message": "Invalid query parameters"}
+        return error("Invalid query parameters")
 
     if limit > 50 or page < 1:
-        return {"status": "error", "message": "Invalid query parameters"}
+        return error("Invalid query parameters")
     
 
     filters = {
@@ -89,15 +92,22 @@ def get_profiles(
 
 @app.get("/api/profiles/search")
 def search(q: str, page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
-    if not q or q.strip() == "":
-        raise HTTPException(status_code=400, detail="Invalid query parameters")
+
+    # -------------------
+    # VALIDATION FIX
+    # -------------------
+    if q is None or not isinstance(q, str) or q.strip() == "":
+        return error("Invalid query parameters")
+
+    if len(q) > 200:
+        return error("Invalid query parameters")
 
     filters = parse_query(q)
 
     if not filters:
-        return {"status": "error", "message": "Unable to interpret query"}
+        return error("Unable to interpret query")
 
-    total, data = query_profiles(db, filters, None, "asc", page, limit)
+    total, data = query_profiles(db, filters, "created_at", "desc", page, limit)
 
     return {
         "status": "success",

@@ -3,7 +3,9 @@ from .models import Profile
 def query_profiles(db, filters, sort_by, order, page, limit):
     query = db.query(Profile)
 
+    # -------------------
     # FILTERS
+    # -------------------
     if filters.get("gender"):
         query = query.filter(Profile.gender == filters["gender"])
 
@@ -29,17 +31,32 @@ def query_profiles(db, filters, sort_by, order, page, limit):
             Profile.country_probability >= filters["min_country_probability"]
         )
 
-    # SORTING
-    if sort_by:
-        column = getattr(Profile, sort_by, None)
-        if column:
-            query = query.order_by(
-                column.desc() if order == "desc" else column.asc()
-            )
+    # -------------------
+    # SORTING (FIXED)
+    # -------------------
+    sort_column_map = {
+        "age": Profile.age,
+        "created_at": Profile.created_at,
+        "gender_probability": Profile.gender_probability
+    }
 
-    total = query.order_by(None).count()
+    column = sort_column_map.get(sort_by, Profile.created_at)
 
+    reverse = True if order == "desc" else False
+
+    query = query.order_by(
+        column.desc() if reverse else column.asc(),
+        Profile.id.desc()   # tie-breaker (VERY IMPORTANT)
+    )
+
+    # -------------------
+    # TOTAL (ONLY ONCE)
+    # -------------------
+    total = query.count()
+
+    # -------------------
     # PAGINATION
+    # -------------------
     results = query.offset((page - 1) * limit).limit(limit).all()
 
     return total, results
