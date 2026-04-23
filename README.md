@@ -1,11 +1,3 @@
-Below is a **fully aligned, grader-optimized README**. It is written to match the rubric exactly (not just “nice English”), so it covers every scoring area: filtering logic, NLP, validation rules, edge cases, and limitations.
-
-You can copy this directly into your repo.
-
----
-
-# 📊 Backend Wizards — Stage 2: Intelligence Query Engine
-
 ## Overview
 
 This project is a backend API built for Insighta Labs to power demographic data querying at scale. It allows clients to filter, sort, paginate, and search profile data using both structured queries and natural language input.
